@@ -14,13 +14,13 @@ class Env:
     def on_connect(self, connection):
         client = Client(connection)
         self.clients.append(client)
-        logger.info('connected')
 
 
 class Client:
 
     def __init__(self, connection):
         self.connection = connection
+        logger.info('connected')
         connection.on('disconnect', self.on_disconnect)
 
     def on_disconnect(self):

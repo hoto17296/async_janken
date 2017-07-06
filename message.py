@@ -1,3 +1,4 @@
+import re
 import asyncio
 from pyee import EventEmitter
 
@@ -15,23 +16,30 @@ class MessageConnection(EventEmitter):
             future = asyncio.open_connection(host, port)
             self.reader, self.writer = loop.run_until_complete(future)
             self.emit('connect')
-            loop.run_until_complete(self.subscribe())
+            loop.run_until_complete(self.listen())
         except KeyboardInterrupt:
             self.emit('interrupt')
         finally:
             self.writer.close()
             loop.close()
 
-    def publish(self, data):
-        if type(data) is str:
-            data = (data+'\n').encode('utf-8')
-        self.writer.write(data)
+    def send(self, event, data='\0'):
+        assert(type(event) is str)
+        assert(type(data) is str)
+        message = '%s\t%s\n' % (event, data)
+        self.writer.write(message.encode())
 
-    async def subscribe(self):
+    async def listen(self):
+        pattern = re.compile(r'^(.+?)\t(.*)\n')
         while True:
-            data = await self.reader.readline()
-            if data:
-                print(data)
+            message = await self.reader.readline()
+            if message:
+                matched = pattern.match(message.decode())
+                assert(matched)
+                if matched[2] != '\0':
+                    self.emit(matched[1], matched[2])
+                else:
+                    self.emit(matched[1])
             else:
                 self.emit('disconnect')
                 return
@@ -48,11 +56,11 @@ class MessageServer(EventEmitter):
         except KeyboardInterrupt:
             self.emit('interrupt')
         finally:
-            self.server.close()
+            server.close()
             loop.run_until_complete(server.wait_closed())
             loop.close()
 
     async def handler(self, reader, writer):
         connection = MessageConnection(reader, writer)
         self.emit('connect', connection)
-        return await connection.subscribe()
+        return await connection.listen()

@@ -2,7 +2,7 @@ import asyncio
 from pyee import EventEmitter
 
 
-class MessageClient(EventEmitter):
+class MessageConnection(EventEmitter):
 
     def __init__(self, reader=None, writer=None):
         super().__init__()
@@ -53,6 +53,6 @@ class MessageServer(EventEmitter):
             loop.close()
 
     async def handler(self, reader, writer):
-        client = MessageClient(reader, writer)
-        self.emit('connect', client)
-        return await client.subscribe()
+        connection = MessageConnection(reader, writer)
+        self.emit('connect', connection)
+        return await connection.subscribe()

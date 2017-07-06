@@ -1,19 +1,19 @@
 import logging
 import asyncio
-from message import MessageClient
+from message import MessageConnection
 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('janken.client')
 
-client = MessageClient()
+connection = MessageConnection()
 
-@client.on('connect')
+@connection.on('connect')
 def on_connect():
     logger.info('connected')
 
-@client.on('disconnect')
+@connection.on('disconnect')
 def on_disconnect():
     logger.info('disconnected')
 
-client.connect('localhost', 8888)
+connection.connect('localhost', 8888)

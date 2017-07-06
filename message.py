@@ -14,9 +14,10 @@ class MessageClient(EventEmitter):
         try:
             future = asyncio.open_connection(host, port)
             self.reader, self.writer = loop.run_until_complete(future)
+            self.emit('connect')
             loop.run_until_complete(self.subscribe())
         except KeyboardInterrupt:
-            pass
+            self.emit('interrupt')
         finally:
             self.writer.close()
             loop.close()
@@ -32,7 +33,7 @@ class MessageClient(EventEmitter):
             if data:
                 print(data)
             else:
-                self.emit('disconnect', self)
+                self.emit('disconnect')
                 return
 
 
@@ -45,7 +46,7 @@ class MessageServer(EventEmitter):
             server = loop.run_until_complete(future)
             loop.run_forever()
         except KeyboardInterrupt:
-            pass
+            self.emit('interrupt')
         finally:
             self.server.close()
             loop.run_until_complete(server.wait_closed())

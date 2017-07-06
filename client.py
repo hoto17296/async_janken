@@ -19,14 +19,16 @@ def on_disconnect():
 @connection.on('ready')
 def on_ready(info):
     action = strategy(info)
-    logger.info('action: %s' % action)
+    action_str = ['✋', '✌', '✊'][action-1]
+    logger.info('action: %s' % action_str)
     connection.send('action', str(action))
 
 def strategy(info):
     return random.randint(1, 3)
 
-@connection.on('issue')
-def on_issue(issue):
-    logger.info('issue: %s' % issue)
+@connection.on('judge')
+def on_judge(judge):
+    judge_str = ['Lose...', 'Draw', 'Win!'][int(judge)+1]
+    logger.info('judge: %s' % judge_str)
 
 connection.connect('localhost', 8888)

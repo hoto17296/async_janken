@@ -12,19 +12,11 @@ class MessageConnection(EventEmitter):
         if writer:
             self.address = writer.get_extra_info('peername')
 
-    def connect(self, host, port):
-        try:
-            loop = asyncio.get_event_loop()
-            future = asyncio.open_connection(host, port)
-            self.reader, self.writer = loop.run_until_complete(future)
-            self.address = self.writer.get_extra_info('peername')
-            self.emit('connect')
-            loop.run_until_complete(self.listen())
-        except KeyboardInterrupt:
-            self.emit('interrupt')
-        finally:
-            self.writer.close()
-            loop.close()
+    async def connect(self, host, port):
+        self.reader, self.writer = await asyncio.open_connection(host, port)
+        self.address = self.writer.get_extra_info('peername')
+        self.emit('connect')
+        await self.listen()
 
     def send(self, event, data='\0'):
         assert(type(event) is str)
@@ -47,28 +39,19 @@ class MessageConnection(EventEmitter):
                 self.emit('disconnect')
                 return
 
+    def close(self):
+        self.writer.close()
+
 
 class MessageServer(EventEmitter):
 
-    def start(self, **kwargs):
-        try:
-            loop = asyncio.get_event_loop()
-            future = self.start_async(**kwargs)
-            loop.run_until_complete(future)
-            loop.run_forever()
-        except KeyboardInterrupt:
-            self.emit('interrupt')
-        finally:
-            loop.run_until_complete(self.close())
-            loop.close()
-
-    async def start_async(self, **kwargs):
+    async def start(self, **kwargs):
         self.server = await asyncio.start_server(self.handler, **kwargs)
 
     async def handler(self, reader, writer):
         connection = MessageConnection(reader, writer)
         self.emit('connect', connection)
-        return await connection.listen()
+        await connection.listen()
 
     async def close(self):
         self.server.close()

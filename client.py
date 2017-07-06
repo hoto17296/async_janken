@@ -1,4 +1,5 @@
 import logging
+import asyncio
 import random
 from message import MessageConnection
 
@@ -31,4 +32,13 @@ def on_judge(judge):
     judge_str = ['Lose...', 'Draw', 'Win!'][int(judge)+1]
     logger.info('judge: %s' % judge_str)
 
-connection.connect('localhost', 8888)
+
+if __name__ == '__main__':
+    try:
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(connection.connect('localhost', 8888))
+    except KeyboardInterrupt:
+        pass
+    finally:
+        loop.run_until_complete(connection.close())
+        loop.close()

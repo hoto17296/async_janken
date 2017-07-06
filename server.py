@@ -20,16 +20,9 @@ class JankenServer:
     def on_disconnect(self, client):
         self.clients.remove(client)
 
-    def start(self, interval=1, **kwargs):
-        try:
-            loop = asyncio.get_event_loop()
-            tasks = (self.server.start_async(**kwargs), self.main(interval))
-            loop.run_until_complete(asyncio.wait(tasks))
-        except KeyboardInterrupt:
-            pass
-        finally:
-            loop.run_until_complete(self.server.close())
-            loop.close()
+    async def start(self, interval=1, **kwargs):
+        await self.server.start(**kwargs)
+        await self.main(interval)
 
     async def main(self, interval):
         counter = 1
@@ -55,6 +48,9 @@ class JankenServer:
     def broadcast(self, *args):
         for client in self.clients:
             client.send(*args)
+
+    async def close(self):
+        await self.server.close()
 
 
 class JankenClient:
@@ -106,4 +102,12 @@ class JankenBattle:
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    JankenServer().start(port=8888)
+    try:
+        loop = asyncio.get_event_loop()
+        server = JankenServer()
+        loop.run_until_complete(server.start(port=8888))
+    except KeyboardInterrupt:
+        pass
+    finally:
+        loop.run_until_complete(server.close())
+        loop.close()

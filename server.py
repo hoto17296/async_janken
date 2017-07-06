@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from message import MessageServer
 
 
@@ -14,6 +15,14 @@ class Env:
     def on_connect(self, connection):
         client = Client(connection)
         self.clients.append(client)
+
+    async def start(self, interval):
+        while True:
+            await asyncio.sleep(interval)
+            if len(self.clients) < 2:
+                logger.info('waiting...')
+            else:
+                logger.info('battle!')
 
 
 class Client:
@@ -31,5 +40,14 @@ class Client:
 
 if __name__ == '__main__':
     server = MessageServer()
-    server.on('connect', Env().on_connect)
-    server.start(port=8888)
+    env = Env()
+    server.on('connect', env.on_connect)
+    try:
+        loop = asyncio.get_event_loop()
+        tasks = (server.start_async(port=8888), env.start(1))
+        loop.run_until_complete(asyncio.wait(tasks))
+    except KeyboardInterrupt:
+        pass
+    finally:
+        loop.run_until_complete(server.close())
+        loop.close()

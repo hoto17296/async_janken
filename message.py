@@ -13,8 +13,8 @@ class MessageConnection(EventEmitter):
             self.address = writer.get_extra_info('peername')
 
     def connect(self, host, port):
-        loop = asyncio.get_event_loop()
         try:
+            loop = asyncio.get_event_loop()
             future = asyncio.open_connection(host, port)
             self.reader, self.writer = loop.run_until_complete(future)
             self.address = self.writer.get_extra_info('peername')
@@ -50,20 +50,26 @@ class MessageConnection(EventEmitter):
 
 class MessageServer(EventEmitter):
 
-    def start(self, port):
+    def start(self, **kwargs):
         try:
             loop = asyncio.get_event_loop()
-            future = asyncio.start_server(self.handler, port=port)
-            server = loop.run_until_complete(future)
+            future = self.start_async(**kwargs)
+            loop.run_until_complete(future)
             loop.run_forever()
         except KeyboardInterrupt:
             self.emit('interrupt')
         finally:
-            server.close()
-            loop.run_until_complete(server.wait_closed())
+            loop.run_until_complete(self.close())
             loop.close()
+
+    async def start_async(self, **kwargs):
+        self.server = await asyncio.start_server(self.handler, **kwargs)
 
     async def handler(self, reader, writer):
         connection = MessageConnection(reader, writer)
         self.emit('connect', connection)
         return await connection.listen()
+
+    async def close(self):
+        self.server.close()
+        await self.server.wait_closed()

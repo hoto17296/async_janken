@@ -1,5 +1,4 @@
 import logging
-import asyncio
 import random
 from message import MessageConnection
 

@@ -3,29 +3,39 @@ import asyncio
 from message import MessageServer
 
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('janken.server')
-
-
-class Env:
+class JankenServer:
 
     def __init__(self):
         self.clients = []
+        self.logger = logging.getLogger('janken.server')
+        self.server = MessageServer()
+        self.server.on('connect', self.on_connect)
 
     def on_connect(self, connection):
-        client = Client(connection)
+        client = JankenClient(connection)
         self.clients.append(client)
 
-    async def start(self, interval):
+    def start(self, interval=1, **kwargs):
+        try:
+            loop = asyncio.get_event_loop()
+            tasks = (self.server.start_async(**kwargs), self.main(interval))
+            loop.run_until_complete(asyncio.wait(tasks))
+        except KeyboardInterrupt:
+            pass
+        finally:
+            loop.run_until_complete(self.server.close())
+            loop.close()
+
+    async def main(self, interval):
         while True:
             await asyncio.sleep(interval)
             if len(self.clients) < 2:
-                logger.info('waiting...')
+                self.logger.info('waiting...')
             else:
-                logger.info('battle!')
+                self.logger.info('battle!')
 
 
-class Client:
+class JankenClient:
 
     def __init__(self, connection):
         self.connection = connection
@@ -39,15 +49,5 @@ class Client:
 
 
 if __name__ == '__main__':
-    server = MessageServer()
-    env = Env()
-    server.on('connect', env.on_connect)
-    try:
-        loop = asyncio.get_event_loop()
-        tasks = (server.start_async(port=8888), env.start(1))
-        loop.run_until_complete(asyncio.wait(tasks))
-    except KeyboardInterrupt:
-        pass
-    finally:
-        loop.run_until_complete(server.close())
-        loop.close()
+    logging.basicConfig(level=logging.INFO)
+    JankenServer().start(port=8888)

@@ -12,8 +12,11 @@ class JankenServer:
         self.server.on('connect', self.on_connect)
 
     def on_connect(self, connection):
-        client = JankenClient(connection)
+        client = JankenClient(self, connection)
         self.clients.append(client)
+
+    def on_disconnect(self, client):
+        self.clients.remove(client)
 
     def start(self, interval=1, **kwargs):
         try:
@@ -37,7 +40,8 @@ class JankenServer:
 
 class JankenClient:
 
-    def __init__(self, connection):
+    def __init__(self, server, connection):
+        self.server = server
         self.connection = connection
         self.id = connection.address[1]
         self.logger = logging.getLogger('janken.client[%d]' % self.id)
@@ -45,6 +49,7 @@ class JankenClient:
         connection.on('disconnect', self.on_disconnect)
 
     def on_disconnect(self):
+        self.server.on_disconnect(self)
         self.logger.info('disconnected')
 
 

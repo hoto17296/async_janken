@@ -20,11 +20,13 @@ class Client:
 
     def __init__(self, connection):
         self.connection = connection
-        logger.info('connected')
+        self.id = connection.address[1]
+        self.logger = logging.getLogger('janken.client[%d]' % self.id)
+        self.logger.info('connected')
         connection.on('disconnect', self.on_disconnect)
 
     def on_disconnect(self):
-        logger.info('disconnected')
+        self.logger.info('disconnected')
 
 
 if __name__ == '__main__':

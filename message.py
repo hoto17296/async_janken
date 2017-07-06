@@ -9,12 +9,15 @@ class MessageConnection(EventEmitter):
         super().__init__()
         self.reader = reader
         self.writer = writer
+        if writer:
+            self.address = writer.get_extra_info('peername')
 
     def connect(self, host, port):
         loop = asyncio.get_event_loop()
         try:
             future = asyncio.open_connection(host, port)
             self.reader, self.writer = loop.run_until_complete(future)
+            self.address = self.writer.get_extra_info('peername')
             self.emit('connect')
             loop.run_until_complete(self.listen())
         except KeyboardInterrupt:

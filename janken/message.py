@@ -20,14 +20,14 @@ class MessageConnection(EventEmitter):
 
     def send(self, event, data='\0'):
         assert(self.writer)
-        assert(type(event) is str and re.compile(r'^\w*$').match(event))
+        assert(type(event) is str and re.compile(r'^\w+$').match(event))
         assert(type(data) is str and not re.compile(r'\n').search(data))
         message = '%s\t%s\n' % (event, data)
         self.writer.write(message.encode())
 
     async def listen(self):
         assert(self.reader)
-        pattern = re.compile(r'^(.+?)\t(.*)\n')
+        pattern = re.compile(r'^(\w+?)\t(.*)\n$')
         while True:
             message = await self.reader.readline()
             if message:

@@ -19,10 +19,10 @@ class MessageConnection(EventEmitter):
         self.emit('connect')
         await self.listen()
 
-    def send(self, event, data='\0'):
+    def send(self, event, *args, **kwargs):
         assert(self.writer)
         assert(type(event) is str and re.compile(r'^\w+$').match(event))
-        message = '%s\t%s\n' % (event, json.dumps(data))
+        message = '%s\t%s\n' % (event, json.dumps([args, kwargs]))
         self.writer.write(message.encode())
 
     async def listen(self):
@@ -34,11 +34,8 @@ class MessageConnection(EventEmitter):
                 matched = pattern.match(message.decode())
                 assert(matched)
                 event, data = matched.groups()
-                data = json.loads(data)
-                if data != '\0':
-                    self.emit(event, data)
-                else:
-                    self.emit(event)
+                args, kwargs = json.loads(data)
+                self.emit(event, *args, **kwargs)
             else:
                 self.emit('disconnect')
                 return

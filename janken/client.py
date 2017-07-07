@@ -19,13 +19,13 @@ def on_disconnect():
     logger.info('disconnected')
 
 @connection.on('ready')
-def on_ready(info):
-    action = strategy(info)
+def on_ready(battle_id):
+    action = strategy()
     action_str = ['✋', '✌', '✊'][action-1]
     logger.info('action: %s' % action_str)
-    connection.send('action', str(action))
+    connection.send('action_%s' % battle_id, str(action))
 
-def strategy(info):
+def strategy():
     time.sleep(np.random.gamma(0.5,1.0))  # think
     return np.random.randint(1, 4)
 

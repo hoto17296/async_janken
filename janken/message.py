@@ -33,10 +33,11 @@ class MessageConnection(EventEmitter):
             if message:
                 matched = pattern.match(message.decode())
                 assert(matched)
-                if matched[2] != '\0':
-                    self.emit(matched[1], matched[2])
+                event, data = matched.groups()
+                if data != '\0':
+                    self.emit(event, data)
                 else:
-                    self.emit(matched[1])
+                    self.emit(event)
             else:
                 self.emit('disconnect')
                 return

@@ -23,7 +23,7 @@ def on_ready(battle_id):
     action = strategy()
     action_str = ['✋', '✌', '✊'][action-1]
     logger.info('action: %s' % action_str)
-    connection.send('action_%s' % battle_id, str(action))
+    connection.send('action_%s' % battle_id, action)
 
 def strategy():
     time.sleep(np.random.gamma(0.5,1.0))  # think
@@ -31,7 +31,7 @@ def strategy():
 
 @connection.on('result')
 def on_judge(judge):
-    judge_str = ['Lose...', 'Draw', 'Win!'][int(judge)+1]
+    judge_str = ['Lose...', 'Draw', 'Win!'][judge+1]
     logger.info('result: %s' % judge_str)
 
 

@@ -1,6 +1,5 @@
 import logging
 import asyncio
-import json
 import numpy as np
 from message import MessageServer
 
@@ -18,12 +17,12 @@ class Player:
 
     async def ready(self, battle_id):
         future = loop.create_future()
-        self.connection.send('ready', str(battle_id))
+        self.connection.send('ready', battle_id)
 
         @self.connection.once('action_%s' % battle_id)
         def on_action(action):
             if not future.done():
-                future.set_result((self, int(action), None))
+                future.set_result((self, action, None))
 
         try:
             return await asyncio.wait_for(future, timeout=1)
@@ -33,9 +32,9 @@ class Player:
 
     def result(self, battle_id, action, judge):
         action_str = ['✋', '✌', '✊'][action-1]
-        judge_str = ['Lose...', 'Draw', 'Win!'][int(judge)+1]
+        judge_str = ['Lose...', 'Draw', 'Win!'][judge+1]
         self.logger.info('%s %s' % (action_str, judge_str))
-        self.connection.send('result', str(judge))
+        self.connection.send('result', judge)
 
 
 class JankenServer:

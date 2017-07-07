@@ -1,4 +1,5 @@
 import re
+import json
 import asyncio
 from pyee import EventEmitter
 
@@ -21,8 +22,7 @@ class MessageConnection(EventEmitter):
     def send(self, event, data='\0'):
         assert(self.writer)
         assert(type(event) is str and re.compile(r'^\w+$').match(event))
-        assert(type(data) is str and not re.compile(r'\n').search(data))
-        message = '%s\t%s\n' % (event, data)
+        message = '%s\t%s\n' % (event, json.dumps(data))
         self.writer.write(message.encode())
 
     async def listen(self):
@@ -34,6 +34,7 @@ class MessageConnection(EventEmitter):
                 matched = pattern.match(message.decode())
                 assert(matched)
                 event, data = matched.groups()
+                data = json.loads(data)
                 if data != '\0':
                     self.emit(event, data)
                 else:

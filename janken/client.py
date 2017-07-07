@@ -29,10 +29,10 @@ def strategy():
     time.sleep(np.random.gamma(0.5,1.0))  # think
     return np.random.randint(1, 4)
 
-@connection.on('judge')
+@connection.on('result')
 def on_judge(judge):
     judge_str = ['Lose...', 'Draw', 'Win!'][int(judge)+1]
-    logger.info('judge: %s' % judge_str)
+    logger.info('result: %s' % judge_str)
 
 
 if __name__ == '__main__':

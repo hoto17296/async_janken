@@ -31,8 +31,11 @@ class Player:
             self.logger.info('timeout')
             return None
 
-    def send(self, *args):
-        self.connection.send(*args)
+    def result(self, battle_id, action, judge):
+        action_str = ['✋', '✌', '✊'][action-1]
+        judge_str = ['Lose...', 'Draw', 'Win!'][int(judge)+1]
+        self.logger.info('%s %s' % (action_str, judge_str))
+        self.connection.send('result', str(judge))
 
 
 class JankenServer:
@@ -68,10 +71,7 @@ class JankenServer:
             self.logger.info('no contest')
             return
         for player, action, judge in self.judge(actions):
-            action_str = ['✋', '✌', '✊'][action-1]
-            judge_str = ['Lose...', 'Draw', 'Win!'][int(judge)+1]
-            self.logger.info('%s %s %s' % (player.id, action_str, judge_str))
-            player.send('judge', str(judge))
+            player.result(self.battle_id, action, judge)
 
     def judge(self, actions):
         uniq = np.unique(actions[:,1])

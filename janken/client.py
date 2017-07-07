@@ -1,6 +1,7 @@
 import logging
 import asyncio
-import random
+import time
+import numpy as np
 from message import MessageConnection
 
 
@@ -25,7 +26,8 @@ def on_ready(info):
     connection.send('action', str(action))
 
 def strategy(info):
-    return random.randint(1, 3)
+    time.sleep(np.random.gamma(0.5,1.0))  # think
+    return np.random.randint(1, 4)
 
 @connection.on('judge')
 def on_judge(judge):
